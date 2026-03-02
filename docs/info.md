@@ -1,3 +1,7 @@
+<!---
+This file is used to generate your project datasheet. Please fill in the information below and delete any sections you do not need.
+-->
+
 ## How it works
 
 This project implements a **2-Bit Branch Predictor** using a Pattern History Table (PHT). Branch predictors are a fundamental component of modern out-of-order processors and are a core topic in computer architecture.
@@ -10,11 +14,12 @@ When a processor fetches instructions from a branch, it needs to guess whether t
 
 The PHT contains **16 entries**, each a **2-bit saturating counter**:
 
-| State                    | Value | Prediction |                  
-| Strongly Not Taken (SNT) | `00`  | Not Taken |
-| Weakly Not Taken (WNT)   | `01`  | Not Taken |
-| Weakly Taken (WT)        | `10`  | **Taken** ← reset default |
-| Strongly Taken (ST)      | `11`  | **Taken** |
+| State | Value | Prediction |
+|-------|-------|------------|
+| Strongly Not Taken (SNT) | `00` | Not Taken |
+| Weakly Not Taken (WNT)   | `01` | Not Taken |
+| Weakly Taken (WT)        | `10` | **Taken** ← reset default |
+| Strongly Taken (ST)      | `11` | **Taken** |
 
 The prediction is simply the **MSB** of the counter: `1` = Taken, `0` = Not Taken.
 
@@ -24,38 +29,29 @@ On a **not-taken** branch, the counter decrements (saturates at `00`).
 The entry is selected using 4 bits of the PC (`pc_index`), giving 16 independently tracked branch sites.
 
 ### State Transition Diagram
-```mermaid
-stateDiagram-v2
-    direction LR
-    SNT : SNT (00)\nPredict: Not Taken
-    WNT : WNT (01)\nPredict: Not Taken
-    WT  : WT  (10)\nPredict: Taken
-    ST  : ST  (11)\nPredict: Taken
 
-    [*] --> WT : reset
+```
+         Taken         Taken         Taken
+  SNT ─────────► WNT ─────────► WT ─────────► ST
+  00              01              10              11
+  ◄─────────── ◄─────────── ◄───────────
+    Not Taken     Not Taken     Not Taken
 
-    SNT --> WNT : Taken
-    WNT --> WT  : Taken
-    WT  --> ST  : Taken
-    ST  --> ST  : Taken (saturate)
-
-    ST  --> WT  : Not Taken
-    WT  --> WNT : Not Taken
-    WNT --> SNT : Not Taken
-    SNT --> SNT : Not Taken (saturate)
+  Predict NOT TAKEN │ Predict TAKEN
+       (MSB=0)      │    (MSB=1)
 ```
 
 ### Pin Description
 
-| Pin          | Direction | Description |
-
-| `ui_in[3:0]` | Input     | `pc_index` — selects 1 of 16 PHT entries (lower PC bits) 
-| `ui_in[4]`   | Input     | `outcome` — actual branch result: 1=Taken, 0=Not Taken 
-| `ui_in[5]`   | Input     | `update` — rising clock edge writes outcome into PHT 
-| `ui_in[7:6]` | Input     | unused 
-| `uo_out[0]`  | Output    | `prediction` — 1=Taken, 0=Not Taken 
-| `uo_out[2:1]`| Output    | `state` — current 2-bit counter value (for debug) 
-| `uo_out[7:3]`| Output    | unused 
+| Pin | Direction | Description |
+|-----|-----------|-------------|
+| `ui_in[3:0]` | Input | `pc_index` — selects 1 of 16 PHT entries (lower PC bits) |
+| `ui_in[4]`   | Input | `outcome` — actual branch result: 1=Taken, 0=Not Taken |
+| `ui_in[5]`   | Input | `update` — rising clock edge writes outcome into PHT |
+| `ui_in[7:6]` | Input | unused |
+| `uo_out[0]`  | Output | `prediction` — 1=Taken, 0=Not Taken |
+| `uo_out[2:1]`| Output | `state` — current 2-bit counter value (for debug) |
+| `uo_out[7:3]`| Output | unused |
 
 ### Usage Protocol
 
@@ -68,7 +64,7 @@ Each branch goes through two phases:
 
 ### Testbench Strategy
 
-The testbench (`test/tb.v`) is written in SystemVerilog and simulated with `iverilog`. 
+The testbench (`test/tb.v`) is written in SystemVerilog and simulated with `iverilog`. It uses the same testbench structure as the course reference testbench with `nonsynth_clock_gen`, `nonsynth_reset_gen`, and PASS/FAIL banners.
 
 A **software reference model** (`ref_pht[]`) mirrors the PHT in software. After every `apply_branch` call, the reference model is also updated — so all prediction checks compare the DUT against an independently computed expected value.
 
@@ -86,10 +82,24 @@ A **software reference model** (`ref_pht[]`) mirrors the PHT in software. After 
 | Saturation boundaries | Verifies counter stays at 00 when at SNT, stays at 11 when at ST |
 | Reference model sweep | Checks all 16 PHT entries against software reference model |
 
+### Why the Testbench Is Sufficient
+
+1. **Golden reference model**: Every check compares DUT output against a software model that independently computes the expected counter state. This prevents both the DUT and the test from having the same bug.
+2. **All 4 counter states explicitly visited**: The testbench walks through every possible saturating counter state (SNT, WNT, WT, ST) and verifies the correct prediction for each.
+3. **Hysteresis verified**: The key advantage of a 2-bit over a 1-bit predictor (needing 2 mispredictions to flip) is explicitly tested.
+4. **Saturation tested**: Both saturation boundaries (00 and 11) are stress-tested with repeated updates.
+5. **Independence verified**: Multiple PHT entries are driven to different states and checked for no cross-interference.
+6. **All 16 entries checked**: The final sweep checks every PHT entry against the reference model.
+
+## External hardware
+
+None required.
 
 ## GenAI Usage
+
 Claude (Anthropic) was used to assist with:
+- Suggesting the 2-bit branch predictor as a unique design suitable for TinyTapeout
 - Drafting the initial Verilog structure for the saturating counter and PHT
 - Structuring the testbench with a software reference model
 
-All code was reviewed, understood, and verified by me. The design is based on material covered in CSE 120 (Computer Architecture) including 2-bit saturating counters, branch prediction, and pipeline hazards.
+All code was reviewed, understood, and verified by the student. The design is based on material covered in CSE 120 (Computer Architecture) including 2-bit saturating counters, branch prediction, and pipeline hazards.
