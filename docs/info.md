@@ -1,7 +1,3 @@
-<!---
-This file is used to generate your project datasheet. Please fill in the information below and delete any sections you do not need.
--->
-
 ## How it works
 
 This project implements a **2-Bit Branch Predictor** using a Pattern History Table (PHT). Branch predictors are a fundamental component of modern out-of-order processors and are a core topic in computer architecture.
@@ -60,14 +56,6 @@ Each branch goes through two phases:
 1. **Predict** (`update=0`): Set `pc_index` to the PC bits of the branch. Read `prediction` immediately (combinational).
 2. **Update** (`update=1`): After the branch resolves, set `outcome` to the actual result and pulse `update=1` for one clock cycle. The PHT entry is updated on the rising clock edge.
 
-## How to test
-
-### Testbench Strategy
-
-The testbench (`test/tb.v`) is written in SystemVerilog and simulated with `iverilog`. It uses the same testbench structure as the course reference testbench with `nonsynth_clock_gen`, `nonsynth_reset_gen`, and PASS/FAIL banners.
-
-A **software reference model** (`ref_pht[]`) mirrors the PHT in software. After every `apply_branch` call, the reference model is also updated — so all prediction checks compare the DUT against an independently computed expected value.
-
 ### Test Cases
 
 | Test | What it covers |
@@ -82,24 +70,12 @@ A **software reference model** (`ref_pht[]`) mirrors the PHT in software. After 
 | Saturation boundaries | Verifies counter stays at 00 when at SNT, stays at 11 when at ST |
 | Reference model sweep | Checks all 16 PHT entries against software reference model |
 
-### Why the Testbench Is Sufficient
 
-1. **Golden reference model**: Every check compares DUT output against a software model that independently computes the expected counter state. This prevents both the DUT and the test from having the same bug.
-2. **All 4 counter states explicitly visited**: The testbench walks through every possible saturating counter state (SNT, WNT, WT, ST) and verifies the correct prediction for each.
-3. **Hysteresis verified**: The key advantage of a 2-bit over a 1-bit predictor (needing 2 mispredictions to flip) is explicitly tested.
-4. **Saturation tested**: Both saturation boundaries (00 and 11) are stress-tested with repeated updates.
-5. **Independence verified**: Multiple PHT entries are driven to different states and checked for no cross-interference.
-6. **All 16 entries checked**: The final sweep checks every PHT entry against the reference model.
-
-## External hardware
-
-None required.
 
 ## GenAI Usage
 
 Claude (Anthropic) was used to assist with:
-- Suggesting the 2-bit branch predictor as a unique design suitable for TinyTapeout
 - Drafting the initial Verilog structure for the saturating counter and PHT
 - Structuring the testbench with a software reference model
 
-All code was reviewed, understood, and verified by the student. The design is based on material covered in CSE 120 (Computer Architecture) including 2-bit saturating counters, branch prediction, and pipeline hazards.
+All code was reviewed, understood, and verified by me. The design is based on material covered in CSE 120 (Computer Architecture) including 2-bit saturating counters, branch prediction, and pipeline hazards.
