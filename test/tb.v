@@ -61,8 +61,18 @@ module testbench
     nonsynth_reset_gen #(.reset_cycles_lo_p(1), .reset_cycles_hi_p(4))
         rg (.clk_i(clk_i), .async_reset_o(reset_i));
 
+    // Power pins for gate-level simulation
+    `ifdef GL_TEST
+        wire VPWR = 1'b1;
+        wire VGND = 1'b0;
+    `endif
+
     // DUT
     tt_um_branch_predictor dut (
+    `ifdef GL_TEST
+        .VPWR    (VPWR),
+        .VGND    (VGND),
+    `endif
         .ui_in   (ui_in),
         .uo_out  (uo_out),
         .uio_in  (uio_in),
