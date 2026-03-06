@@ -36,21 +36,20 @@ async def test_project(dut):
     assert dut.uo_out.value == 5, f"After reset, expected uo_out=5 (WT, predict Taken), got {dut.uo_out.value}"
 
     # Test 2: Update pc_index=0 with outcome=Taken (should go WT->ST)
-    # ui_in = {2'b00, update=1, outcome=1, pc_index=0000} = 0b00110000 = 48
+    # ui_in = {2'b00, update=1, outcome=1, pc_index=0000} = 0b00110000
     dut.ui_in.value = 0b00110000
-    await ClockCycles(dut.clk, 2)
-    # Now read back without update
-    # ui_in = {2'b00, update=0, outcome=0, pc_index=0000} = 0
+    await ClockCycles(dut.clk, 1)
+    # Deassert update after 1 cycle to avoid double-update
     dut.ui_in.value = 0
     await ClockCycles(dut.clk, 2)
     # ST(11): prediction=1, state=2'b11 -> uo_out = 0b00000111 = 7
     assert dut.uo_out.value == 7, f"After Taken update, expected uo_out=7 (ST), got {dut.uo_out.value}"
 
     # Test 3: Update pc_index=1 with outcome=Not Taken (should go WT->WNT)
-    # ui_in = {2'b00, update=1, outcome=0, pc_index=0001} = 0b00100001 = 33
+    # ui_in = {2'b00, update=1, outcome=0, pc_index=0001} = 0b00100001
     dut.ui_in.value = 0b00100001
-    await ClockCycles(dut.clk, 2)
-    # Read back pc_index=1
+    await ClockCycles(dut.clk, 1)
+    # Deassert update after 1 cycle
     dut.ui_in.value = 0b00000001
     await ClockCycles(dut.clk, 2)
     # WNT(01): prediction=0, state=2'b01 -> uo_out = 0b00000010 = 2
