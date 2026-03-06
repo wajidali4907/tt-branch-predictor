@@ -15,7 +15,7 @@ async def test_project(dut):
     poll_ns = 1000  # check every 1us
 
     for _ in range(timeout_ns // poll_ns):
-        await Timer(poll_ns, units="ns")
+        await Timer(poll_ns, unit="ns")
         try:
             pass_o = dut.pass_o.value
             error_o = dut.error_o.value

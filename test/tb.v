@@ -1,8 +1,8 @@
 `timescale 1ns/1ps
 
 `define START_TESTBENCH  error_o = 0; pass_o = 0; #10;
-`define FINISH_WITH_FAIL error_o = 1; pass_o = 0; #10; $finish();
-`define FINISH_WITH_PASS pass_o = 1; error_o = 0; #10; $finish();
+`define FINISH_WITH_FAIL error_o = 1; pass_o = 0; #10;
+`define FINISH_WITH_PASS pass_o = 1; error_o = 0; #10;
 
 // ============================================================
 // Clock generator
